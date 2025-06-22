@@ -1,10 +1,5 @@
-const express = require("express");
-const {
-  saveStore,
-  getNextId,
-  getStore,
-  setStore,
-} = require("./utils");
+const express = require('express');
+const { saveStore, getNextId, getStore } = require('./utils');
 
 const app = express();
 const port = 3000;
@@ -12,12 +7,11 @@ const port = 3000;
 app.use(express.json());
 
 // GET all (excluding soft-deleted)
-app.get("/:type", (req, res) => {
+app.get('/users', (req, res) => {
   try {
-    const { type } = req.params;
     const store = getStore();
-    const data = store[type];
-    if (!data) return res.status(404).json({ error: "Store not found" });
+    const data = store.users;
+    if (!data) return res.status(404).json({ error: 'Store not found' });
 
     const result = data
       .map((item) => ({
@@ -35,20 +29,21 @@ app.get("/:type", (req, res) => {
 
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    res.status(500).json({ error: 'Internal error', detail: err.message });
   }
 });
 
 // GET by ID
-app.get("/:type/:id", (req, res) => {
+app.get('/users/:id', (req, res) => {
   try {
-    const { type, id } = req.params;
+    const { id } = req.params;
     const store = getStore();
-    const data = store[type];
-    if (!data) return res.status(404).json({ error: "Store not found" });
+    const data = store.users;
+    if (!data) return res.status(404).json({ error: 'Store not found' });
 
     const item = data.find((i) => String(i.id) === id);
-    if (!item || item.is_deleted) return res.status(404).json({ error: "Item not found" });
+    if (!item || item.is_deleted)
+      return res.status(404).json({ error: 'Item not found' });
 
     item.get_count = (item.get_count || 0) + 1;
     item.last_get_date = new Date().toISOString();
@@ -56,25 +51,24 @@ app.get("/:type/:id", (req, res) => {
     saveStore();
     res.json(item);
   } catch (err) {
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    res.status(500).json({ error: 'Internal error', detail: err.message });
   }
 });
 
 // POST new
-app.post("/:type", (req, res) => {
+app.post('/users', (req, res) => {
   try {
-    const { type } = req.params;
     const body = req.body;
     const store = getStore();
 
     if (!body.first || !body.last) {
-      return res.status(400).json({ error: "Missing first or last name" });
+      return res.status(400).json({ error: 'Missing first or last name' });
     }
 
-    if (!store[type]) store[type] = [];
+    if (!store.users) store.users = [];
 
     const newItem = {
-      id: getNextId(store[type]),
+      id: getNextId(store.users),
       first: body.first,
       last: body.last,
       is_deleted: false,
@@ -85,25 +79,26 @@ app.post("/:type", (req, res) => {
       last_deleted_date: null,
     };
 
-    store[type].push(newItem);
+    store.users.push(newItem);
     saveStore();
     res.status(201).json(newItem);
   } catch (err) {
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    res.status(500).json({ error: 'Internal error', detail: err.message });
   }
 });
 
 // PATCH by ID
-app.patch("/:type/:id", (req, res) => {
+app.patch('/users/:id', (req, res) => {
   try {
-    const { type, id } = req.params;
+    const { id } = req.params;
     const updates = req.body;
     const store = getStore();
-    const data = store[type];
-    if (!data) return res.status(404).json({ error: "Store not found" });
+    const data = store.users;
+    if (!data) return res.status(404).json({ error: 'Store not found' });
 
     const item = data.find((i) => String(i.id) === id);
-    if (!item || item.is_deleted) return res.status(404).json({ error: "Item not found" });
+    if (!item || item.is_deleted)
+      return res.status(404).json({ error: 'Item not found' });
 
     Object.assign(item, updates);
     item.is_patched = true;
@@ -111,51 +106,51 @@ app.patch("/:type/:id", (req, res) => {
     saveStore();
     res.json(item);
   } catch (err) {
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    res.status(500).json({ error: 'Internal error', detail: err.message });
   }
 });
 
 // DELETE by ID (soft-delete)
-app.delete("/:type/:id", (req, res) => {
+app.delete('/users/:id', (req, res) => {
   try {
-    const { type, id } = req.params;
+    const { id } = req.params;
     const store = getStore();
-    const data = store[type];
-    if (!data) return res.status(404).json({ error: "Store not found" });
+    const data = store.users;
+    if (!data) return res.status(404).json({ error: 'Store not found' });
 
     const item = data.find((i) => String(i.id) === id);
-    if (!item || item.is_deleted) return res.status(404).json({ error: "Item not found" });
-
+    if (!item || item.is_deleted)
+      return res.status(404).json({ error: 'Item not found' });
     item.is_deleted = true;
     item.last_deleted_date = new Date().toISOString();
     saveStore();
     res.json(item);
   } catch (err) {
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    res.status(500).json({ error: 'Internal error', detail: err.message });
   }
 });
 
 // Restore soft-deleted
-app.post("/:type/:id/retrieve", (req, res) => {
+app.post('/users/:id/retrieve', (req, res) => {
   try {
-    const { type, id } = req.params;
+    const { id } = req.params;
     const store = getStore();
-    const data = store[type];
-    if (!data) return res.status(404).json({ error: "Store not found" });
+    const data = store.users;
+    if (!data) return res.status(404).json({ error: 'Store not found' });
 
     const item = data.find((i) => String(i.id) === id);
-    if (!item) return res.status(404).json({ error: "Item not found" });
+    if (!item) return res.status(404).json({ error: 'Item not found' });
 
     if (!item.is_deleted) {
-      return res.status(400).json({ error: "Item is not deleted" });
+      return res.status(400).json({ error: 'Item is not deleted' });
     }
 
     item.is_deleted = false;
     item.last_patch_date = new Date().toISOString();
     saveStore();
-    res.json({ message: "Item restored", item });
+    res.json({ message: 'Item restored', item });
   } catch (err) {
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    res.status(500).json({ error: 'Internal error', detail: err.message });
   }
 });
 
