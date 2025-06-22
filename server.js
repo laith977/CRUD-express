@@ -20,7 +20,7 @@ const getNextId = (items) => {
 app.use(express.json());
 
 // Generic GET all for a given store
-app.get("/:type", (req, res) => {
+app.get("/humans", (req, res) => {
   const { type } = req.params;
   const data = store[type];
   if (!data) return res.status(404).json({ error: "Store not found" });
@@ -29,7 +29,7 @@ app.get("/:type", (req, res) => {
 });
 
 // Generic GET by ID (increments get_count)
-app.get("/:type/:id", (req, res) => {
+app.get("/humans/:id", (req, res) => {
   const { type, id } = req.params;
   const data = store[type];
   if (!data) return res.status(404).json({ error: "Store not found" });
@@ -44,7 +44,7 @@ app.get("/:type/:id", (req, res) => {
 });
 
 // Generic POST
-app.post("/:type", (req, res) => {
+app.post("/:humans", (req, res) => {
   const { type } = req.params;
   const body = req.body;
 
@@ -72,7 +72,7 @@ app.post("/:type", (req, res) => {
 });
 
 // Generic PATCH
-app.patch("/:type/:id", (req, res) => {
+app.patch("/:humans/:id", (req, res) => {
   const { type, id } = req.params;
   const updates = req.body;
   const data = store[type];
@@ -89,7 +89,7 @@ app.patch("/:type/:id", (req, res) => {
 });
 
 // Generic DELETE
-app.delete("/:type/:id", (req, res) => {
+app.delete("/:humans/:id", (req, res) => {
   const { type, id } = req.params;
   const data = store[type];
   if (!data) return res.status(404).json({ error: "Store not found" });
